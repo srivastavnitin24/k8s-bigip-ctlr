@@ -1,0 +1,38 @@
+trigger:
+  branches:
+    include:
+    - master
+variables:
+- name: imageName
+  value: 'n.srivastav/k8s-bigip-ctlr-azure'
+- name: serviceConnection
+  value: 'n.srivastav'
+- name: redhatRepo
+  value: 'lohiya'
+- name: redhatConnection
+  value: 'lohiya.redhat'
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: Docker@2
+      displayName: Build from Red Hat Universal Base Image
+      inputs:
+        command: build
+        containerRegistry: $(redhatConnection)
+        repository: $(imageName)
+        Dockerfile: build-tools/Dockerfile.rhel.multistage
+        buildContext: .
+        tags: latest
+        arguments: "--build-arg BUILD_INFO=$(BUILD_INFO) --build-arg BUILD_VERSION=$(BUILD_VERSION) --build-arg RUN_TESTS=$(RUN_TESTS)"
+    - task: Docker@2
+      displayName: Push image to quay.io
+      inputs:
+        command: push
+        containerRegistry: $(serviceConnection)
+        repository: $(imageName)
+        tags: latest
+
